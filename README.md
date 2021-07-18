@@ -1,7 +1,7 @@
 Appli de gestion de colocs.
 Permet de gérer les comptes (et peut-être un jour les calendriers, anniversaires et autres joyeusetés) !
 
-Ce module est codé en python 3, avec Flask.
+Ce module est codé pour python 3.7, avec Flask.
 
 
 ###############################################################################
