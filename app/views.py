@@ -1,18 +1,20 @@
-# -*- coding: utf8 -*-
+# coding: utf8
 
+import csv
+from functools import wraps
+from io import StringIO
 from sys import exc_info
-from config import LOGGER
 
-from flask import render_template, flash, redirect, session, url_for, request, g
+import flask_login
+from babel.dates import datetime
+from flask import render_template, flash, redirect, session, url_for, request, g, make_response
 from flask_login import login_user, logout_user, current_user
+from sqlalchemy import desc
 
 from app import coreApp, db, lm
-from .forms import LoginForm, LostPasswdForm, EditUserForm, AddUserForm, SpendingForm
+from config import LOGGER
+from .forms import LoginForm, LostPasswdForm, EditUserForm, SpendingForm
 from .models import User, Spending
-
-from functools import wraps
-from babel.dates import format_date, datetime
-from sqlalchemy import desc
 
 
 # THIS FUNCTION SHOULD BE A STATIC_METHOD OF SPENDING() CLASS!
@@ -290,6 +292,45 @@ def comptesBis():
 def comptes2Bis():
     return redirect(url_for('comptes', spends_page='depenses'))
 
+
+def load_spendings():
+    times = {}
+    payers = {}
+    my_parts = {}
+    # payer_ids = {}
+    spendings = Spending.query.order_by(desc('s_date')).all()
+    for spending in spendings:
+        times[spending.id] = spending.getDate(current_user)
+        payers[spending.id] = User.getNameStatic(spending.payer_id)
+        my_parts[spending.id] = Spending.getPart(spending, current_user.id)
+    return times, payers, my_parts, spendings
+
+
+@coreApp.route('/comptes/export')
+def comptes_export():
+    tmp_buff = StringIO()
+    csv_file = csv.writer(tmp_buff, delimiter=";")
+    csv_file.writerow(('date', 'categorie', 'titre', 'montant', 'payeur', 'ma part', 'commentaire'))
+
+    current_user_id = flask_login.current_user
+    times, payers, my_parts, spendings = load_spendings()
+    for depense in spendings:
+        date = times[depense.id]
+        categorie = depense.s_type
+        title = depense.label
+        montant = f'{depense.total:0.2f} €'.replace(',', '.').replace('.00', ' ')
+        payeur = 'Moi' if depense.payer_id == current_user_id else payers[depense.id]
+        ma_part = '--' if my_parts[depense.id] == 0 else f'{my_parts[depense.id]:0.2f} €'.replace(',', '.').replace('.00,', ' ')
+        comment = depense.comment if depense.comment else ''
+
+        csv_file.writerow((e for e in [date, categorie, title, montant, payeur, ma_part, comment]))
+
+    output = make_response(tmp_buff.getvalue())
+    output.headers["Content-Disposition"] = "attachment; filename=depenses_export.csv"
+    output.headers["Content-type"] = "text/csv; charset=utf-8"
+    return output
+
+
 @coreApp.route('/comptes/<spends_page>', methods=['GET', 'POST'])
 @login_required
 def comptes(spends_page):
@@ -354,16 +395,8 @@ def comptes(spends_page):
     # list all spendings from the database
     if spends_page == 'depenses':
         #print 'DEL', request.form['del_spending']
-        payers = {}
-        times = {}
-        my_parts = {}
-        payer_ids = {}
-        spendings = Spending.query.order_by(desc('s_date')).all()
+        times, payers, my_parts, spendings = load_spendings()
 
-        for spending in spendings:
-            times[spending.id] = spending.getDate(current_user)
-            payers[spending.id] = User.getNameStatic(spending.payer_id)
-            my_parts[spending.id] = Spending.getPart(spending, current_user.id)
         return render_template(
             'comptes.html',
             app_name=app_name,
