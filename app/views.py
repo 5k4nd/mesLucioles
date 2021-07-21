@@ -163,7 +163,7 @@ def try_login(email, password):
         if 'remember_me' in session:
             remember_me = session['remember_me']
             session.pop('remember_me', None)
-        success = login_user(user, remember=remember_me)
+        success = login_user(user, remember=remember_me, force=True)
         if not success:
             flash(u'mmh... mauvaise adresse mail !')
     else:
@@ -347,6 +347,10 @@ def comptes(spends_page):
 
     # add a spending to the database
     if spends_page == 'ajoutDepense':
+        if not g.user.is_active:
+            flash(u'impossible d\'ajouter une dépense (utilisateur désactivé)')
+            return redirect(url_for('comptes', spends_page='depenses'))
+
         form = SpendingForm()
         users = [(user.id, user.getName()) for user in User.query.order_by('id')]
         form.payer_id.choices = users
@@ -509,8 +513,15 @@ def getSpending(id):
 @coreApp.route('/comptes/supprDepense/<id>', methods=['GET', 'POST'])
 @login_required
 def delSpending(id):
-    bill = Spending.query.get(int(id))
+    if not g.user.is_active:
+        flash(u'impossible de supprimer la dépense (utilisateur désactivé)')
+        return redirect(url_for(
+            'comptes',
+            app_name=app_name,
+            spends_page='depenses'
+        ))
 
+    bill = Spending.query.get(int(id))
     if bill is None:
         flash(u'Dépense (id = %s) introuvable' % id)
         return redirect(url_for(
