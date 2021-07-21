@@ -163,7 +163,9 @@ def try_login(email, password):
         if 'remember_me' in session:
             remember_me = session['remember_me']
             session.pop('remember_me', None)
-        login_user(user, remember = remember_me)
+        success = login_user(user, remember=remember_me)
+        if not success:
+            flash(u'mmh... mauvaise adresse mail !')
     else:
         flash(u'mauvais mot de passe')
         return redirect(url_for('index'))

@@ -38,3 +38,4 @@ WHOOSH_ENABLED = True
 
 SECRET_KEY = os.environ['SECRET_KEY']
 
+DISABLED_USERS_IDS = []

@@ -9,7 +9,8 @@ from werkzeug.security import generate_password_hash, check_password_hash
 
 from app import db
 from config import \
-    LOGGER  # pour le support de la recherche dans les factures, voir : https://github.com/miguelgrinberg/microblog/blob/master/app/models.py
+    LOGGER, \
+    DISABLED_USERS_IDS  # pour le support de la recherche dans les factures, voir : https://github.com/miguelgrinberg/microblog/blob/master/app/models.py
 
 
 class User(db.Model):
@@ -37,16 +38,20 @@ class User(db.Model):
         print('user_id:', self.get_id())
         return True 
 
-    def is_active(self):
-    #TODO: useless function?
+    @property
+    def is_active(self) -> bool:
         "should return True for users unless they are inactive, for example because they have been banned"
-        return True
+        if self.id not in DISABLED_USERS_IDS:
+            return True
+        else:
+            return False
+
     def is_anonymous(self):
     #TODO: useless function?
         "should return True only for fake users that are not supposed to log in to the system"
         return False
 
-    def get_id(self):
+    def get_id(self) -> str:
         "should return a unique identifier for the user, in unicode format"
         return str(self.id)
 
