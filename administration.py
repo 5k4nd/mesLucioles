@@ -86,6 +86,22 @@ def addTypes():
     db.session.commit()
 
 
+def delete_spendings_before_date():
+    # WARNING, IT WILL BREAKS BALANCES!!
+
+    from datetime import date
+    db_session = db.session()  # it may not work: use the line below
+    # db_session = db.object_session(list(models.Spending.query)[0])
+
+    # list(models.Spending.query.filter(models.Spending.s_date>date(year=2021, month=9, day=1)).order_by(models.Spending.s_date.asc()))[3]
+    for spending in models.Spending.query.filter(models.Spending.s_date < date(year=2021, month=9, day=1)):
+        for part in spending.parts:
+            db_session.delete(part)
+        db_session.delete(spending)
+
+    db_session.commit()
+
+
 if __name__ == '__main__':
     if argv[1] == str(0):
         email = argv[2]
