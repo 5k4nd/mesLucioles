@@ -352,7 +352,8 @@ def comptes(spends_page):
             return redirect(url_for('comptes', spends_page='depenses'))
 
         form = SpendingForm()
-        users = [(user.id, user.getName()) for user in User.query.order_by('id')]
+        all_other_users = [(user.id, user.getName()) for user in User.query.filter(User.id != g.user.id).order_by('id')]
+        users = [(current_user.id, current_user.getName())] + all_other_users
         form.payer_id.choices = users
         form.bill_user_ids.choices = users
         if form.validate_on_submit():
