@@ -48,33 +48,9 @@
                 </td>
                 
                  <td>
-                    <a href='#' data-href="{{ url_for('delSpending', id=depense.id) }}" data-toggle="modal" data-target="#confirm-box"><em class="glyphicon glyphicon-remove"></em></a>
-                    <div class="modal fade" id="confirm-box" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
-                        <div class="modal-dialog">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
-                                    <h4 class="modal-title" id="myModalLabel">Supprimer la dépense</h4>
-                                </div>
-                            
-                                <div class="modal-body">
-                                    <p>Vraiment, supprimer la dépense <b>{{depense.label}}</b> d'un montant de <b>{{ ('%0.2f' % depense.total, '€')|join(' ')|replace(".", ",")|replace(',00 ', ' ') }}</b> ?</b>
-                                    {# <p class="debug-url"></p> #}
-                                </div>
-                                
-                                <div class="modal-footer">
-                                    <button type="button" class="btn btn-default" data-dismiss="modal">En fait non</button>
-                                    <a class="btn btn-danger btn-ok">Oui, vraiment !</a>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <script>
-                    $('#confirm-box').on('show.bs.modal', function(e) {
-                        $(this).find('.btn-ok').attr('href', $(e.relatedTarget).data('href'));
-                        // $('.debug-url').html('Delete URL: <strong>' + $(this).find('.btn-ok').attr('href') + '</strong>');
-                    });
-                    </script>
+                    <a onclick="return confirm('Vraiment, supprimer la dépense {{depense.label}} ({{ depense.total }}€) ?')"
+                       href="{{ url_for('delSpending', id=depense.id) }}"><em class="glyphicon glyphicon-remove"></em></a>
+
                 </td>
 
             {% if depense.type == 'repeated' %}
