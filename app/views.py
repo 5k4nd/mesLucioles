@@ -134,6 +134,10 @@ def login():
     if g.user.is_authenticated:
         return redirect(url_for('index'))
     else:
+        # hack for adding Yunohost SSOwat support
+        ssowat_user = request.cookies.get("SSOwAuthUser")
+        try_yunohost_ssowat_login(ssowat_user)
+
         form = LoginForm()
         if form.validate_on_submit():
             #session['remember_me'] = form.remember_me.data
@@ -146,11 +150,13 @@ def login():
                     print(error)
             return render_template('login.html', form=form, app_name=app_name)
 
+
 @lm.user_loader
 def loadUser(id):  #NOTE: user ids in Flask-Login are always unicode strings
     "Flask useful method"
     #really? I think this method is useless (Bat)
     return User.query.get(int(id))
+
 
 def try_login(email, password):
 # TODO: investigate on this method, optimize
@@ -170,6 +176,16 @@ def try_login(email, password):
         flash(u'mauvais mot de passe')
         return redirect(url_for('index'))
     return redirect(request.args.get('next') or url_for('index'))
+
+
+def try_yunohost_ssowat_login(ssowat_user: str):
+    """Fixme: NEVER USE THIS IN PRODUCTION, firstname is not a primary key!."""
+    user = User.query.filter_by(firstname=ssowat_user).first()
+    if user:
+        login_user(user)
+        return redirect(request.args.get('next') or url_for('index'))
+    else:
+        return redirect(url_for('index'))
 
 
 @coreApp.route('/logout')
