@@ -12,6 +12,6 @@ MarkupSafe==2.0.1
 pytz==2021.1
 SQLAlchemy==1.4.21
 typing-extensions==3.10.0.0
-Werkzeug==2.0.1
+Werkzeug==2.2.3
 WTForms==2.3.3
 zipp==3.5.0
